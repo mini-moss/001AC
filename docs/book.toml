@@ -1,0 +1,22 @@
+[book]
+title = "Robot RTOS 开发指南"
+authors = ["junbo.dai"]
+description = "用 C 语言从零为机器人构建一个多平台实时操作系统的分阶段路线图"
+language = "zh"
+multilingual = false
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = true
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/junbo.dai/minimoss-001AC"
+edit-url-template = "https://github.com/junbo.dai/minimoss-001AC/edit/main/docs/{path}"
+site-url = "/minimoss-001AC/"
+no-section-label = false
+mathjax-support = false
+copy-fonts = true
+additional-css = []

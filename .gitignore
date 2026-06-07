@@ -1,0 +1,29 @@
+# Build artifacts
+build/
+*.o
+*.elf
+*.bin
+*.img
+*.map
+*.dis
+*.lst
+*.d
+
+# Cross toolchain (if accidentally checked in)
+/cross/
+
+# mdbook output
+docs/book/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log

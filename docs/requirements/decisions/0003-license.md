@@ -104,8 +104,8 @@
 
 ## Validation
 
-- [ ] 仓库根有 `LICENSE` 文件，文本 = Apache 2.0 标准文本（https://www.apache.org/licenses/LICENSE-2.0.txt）
-- [ ] README 明确写「Apache 2.0」
+- [x] 仓库根有 `LICENSE` 文件，文本 = Apache 2.0 标准文本（https://www.apache.org/licenses/LICENSE-2.0.txt）
+- [x] README 明确写「Apache 2.0」
 - [ ] 引入新第三方依赖时，**必须**更新本 ADR + README 第三方表
 - [ ] 任一商业公司询问「能不能用」时 → 直接指回本 ADR
 

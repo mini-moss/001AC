@@ -1,10 +1,12 @@
-# 001AC
+# minimoss 001AC
 
-> 用 C 语言从零为机器人构建一个多平台实时操作系统（RTOS）
+> 用 C 语言从零构建一个**双 ISA 统一混合内核**——同一份内核同时调度硬实时任务（电机/传感器）与通用任务（shell/文件 IO），跨 ARM Cortex-A 与 RISC-V RV64 验证可移植性
+
+详细愿景见 [docs/requirements/requirements.md §0](docs/requirements/requirements.md#0-项目愿景)；架构背景见 [docs/dev-log/005](docs/dev-log/005-unified-hybrid-kernel-v1-subscope.md)。
 
 ## 项目状态
 
-🚧 **实验性** —— 路线图阶段，代码尚未实现
+🚧 **Phase 0 — 需求与决策已定稿**（v0.3.1）：宪法 + 6 ADR 就绪，待 commit；Phase 1 代码尚未开始
 
 ## 文档
 
@@ -51,12 +53,13 @@ docs/
 
 ## 范围
 
-- **平台**：ARM Cortex-A (Pi 4/5) + RISC-V RV64 (SG2002 C906)
-- **起点**：从零手写内核（**带 MMU**，单地址空间）
-- **功能**：基础内核 + 电机/传感器驱动 + micro-ROS + 文件系统/网络/GUI
+- **平台**：ARM Cortex-A (Pi 4/5) + RISC-V RV64 (SG2002 C906)；详见 [ADR-0001](docs/requirements/decisions/0001-cpu-arch.md)
+- **架构**：双 ISA 统一混合内核（RT + GPOS 共存），每进程独立页表 + ASID；详见 [ADR-0004](docs/requirements/decisions/0004-single-address-space.md)
+- **v1.0 sub-scope**：进程隔离 + 双队列调度 + 基础 VFS（vfat）+ 用户态 ELF + 简单 shell；详见 [requirements §9](docs/requirements/requirements.md#9-v10-sub-scope-详细清单)
+- **v1.0 不做**：capability / 完整 POSIX / 网络 / GUI / 动态加载（留 v2.0+）；详见 [requirements §6](docs/requirements/requirements.md#6-不做什么out-of-scope)
 
-详细范围与排除项见 [docs/requirements/requirements.md](docs/requirements/requirements.md)，决策背景见 [docs/dev-log/](docs/dev-log/)。
+完整决策记录见 [docs/requirements/decisions/](docs/requirements/decisions/)（6 份 ADR），架构演进见 [docs/dev-log/](docs/dev-log/)。
 
 ## 许可证
 
-待定（建议 Apache 2.0，见 [requirements §5](docs/requirements/requirements.md#5-许可协议)）。
+Apache License 2.0；详见 [ADR-0003](docs/requirements/decisions/0003-license.md)。

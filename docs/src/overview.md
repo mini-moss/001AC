@@ -1,5 +1,7 @@
 # 总览
 
+> ⚠️ **v0.3.1 升级中**：本书正文（除 README 与 Phase 0 指针）仍反映 v0.1/v0.2 的 RTOS 路线，将在 Phase 1 启动时全面重写为双 ISA 统一混合内核版本。当前生效的设计见 [requirements v0.3.1](../requirements/requirements.md) + 6 份 [ADR](../requirements/decisions/)。
+
 整个项目划分为 10 个 Phase，分为四部分。**建议先把第一部分做扎实，再做后续。**
 
 ## 路线图全景

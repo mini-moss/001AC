@@ -1,5 +1,7 @@
 # 简介
 
+> ⚠️ **v0.3.1 升级中**：本书正文（除 README 与 Phase 0 指针）仍反映 v0.1/v0.2 的 RTOS 路线，将在 Phase 1 启动时全面重写为双 ISA 统一混合内核版本。当前生效的设计见 [requirements v0.3.1](../requirements/requirements.md)。
+
 本书是「用 C 语言从零为机器人构建一个多平台实时操作系统（RTOS）」的实战路线图。
 
 ## 为什么写这本书

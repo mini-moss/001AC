@@ -111,7 +111,7 @@ LDFLAGS   = -nostdlib -T $(LDSCRIPT)
 
 .DEFAULT_GOAL := all
 
-.PHONY: all clean qemu qemu-debug qemu-test help check-toolchain
+.PHONY: all clean qemu qemu-debug qemu-test compdb help check-toolchain
 
 # ── check-toolchain ──────────────────────────────────────────────────
 # Guard: fail early if no cross-compiler is available.  Only runs when
@@ -192,6 +192,12 @@ qemu-test: all
 	    exit 1; \
 	  fi
 
+# ── compdb ─────────────────────────────────────────────────────────
+# Generate compile_commands.json for clangd IntelliSense.
+# The file is machine-specific (absolute paths) — do NOT commit.
+compdb:
+	@python3 tools/gen-compdb.py
+
 # ── help ─────────────────────────────────────────────────────────────
 help:
 	@echo "minimoss build system"
@@ -202,6 +208,7 @@ help:
 	@echo "  make qemu-test     Build + QEMU smoke test (CI, non-interactive)"
 	@echo "  make qemu-debug    Build + QEMU with GDB stub (:1234)"
 	@echo "  make clean         Remove build/"
+	@echo "  make compdb        Generate compile_commands.json for IDE"
 	@echo "  make help          This message"
 	@echo ""
 	@echo "Defaults:  ARCH=aarch64  BOARD=pi4"

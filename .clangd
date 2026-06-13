@@ -1,11 +1,2 @@
-CompileFlags:
-  Add:
-    - "-I."
-    - "-DBOARD_PI4"
-    - "-nostdlib"
-    - "-ffreestanding"
-    - "--target=aarch64-elf"
-    - "-mgeneral-regs-only"
-
 Diagnostics:
   UnusedIncludes: None

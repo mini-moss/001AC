@@ -1,18 +1,18 @@
 /*
- * board.h — Raspberry Pi 4 (BCM2711) board-level configuration
+ * board.h — Raspberry Pi 4 (BCM2711) 板级配置
  *
- * This file is the single source of truth for hardware parameters that vary
- * per board: MMIO base addresses, peripheral types, memory layout, etc.
+ * 本文件是每块板不同硬件参数的唯一真实来源：
+ * MMIO 基地址、外设类型、内存布局等。
  *
- * Phase 1 scope: UART only.  More entries (GIC, timer, RAM) will be added
- * in Phase 2 when the HAL layer is formalised.
+ * Phase 1 范围：仅 UART。更多条目（GIC、timer、RAM）将在
+ * Phase 2 HAL 层正式化时添加。
  */
 
 #pragma once
 
 /* ── UART ──────────────────────────────────────────────────────────
- * BCM2711 has two PL011 UARTs.  UART0 is brought out on GPIO 14/15.
- * Base address from BCM2711 ARM Peripherals manual §2.1.
+ * BCM2711 有两个 PL011 UART。UART0 引出到 GPIO 14/15。
+ * 基地址来自 BCM2711 ARM Peripherals 手册 §2.1。
  */
 #define BOARD_UART0_BASE  0xFE201000UL
 #define BOARD_UART_TYPE   UART_TYPE_PL011

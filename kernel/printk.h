@@ -1,25 +1,24 @@
 /*
- * printk.h — kernel formatted console output
+ * printk.h — 内核格式化控制台输出
  *
- * A minimal printf-style function for kernel diagnostics.  Supports:
- *   %s — NUL-terminated string
- *   %d — signed decimal integer
- *   %u — unsigned decimal integer
- *   %x — unsigned hex (lowercase, 32-bit)
- *   %c — single character
- *   %% — literal %
+ * 用于内核诊断的最小 printf 风格函数。支持：
+ *   %s — NUL 结尾字符串
+ *   %d — 有符号十进制整数
+ *   %u — 无符号十进制整数
+ *   %x — 无符号十六进制（小写，64 位）
+ *   %c — 单个字符
+ *   %% — 字面量 %
  *
- * Output goes to uart_putc() (defined in kernel/uart.h).  This is a
- * synchronous, busy-wait implementation — no buffering, no IRQ-driven
- * output.  Fine for Phase 1–3 debugging.
+ * 输出到 uart_putc()（定义在 kernel/uart.h）。这是一个同步、
+ * 忙等待实现 —— 无缓冲、无 IRQ 驱动输出。适用于 Phase 1–3 调试。
  */
 
 #pragma once
 
 /*
- * Print a formatted string to the debug UART.
+ * 向调试 UART 打印格式化字符串。
  *
- * Not interrupt-safe (uses busy-wait UART writes).  Call only from
- * task context or from exception handlers where blocking is acceptable.
+ * 非中断安全（使用忙等待 UART 写入）。仅在 task 上下文或
+ * 可接受阻塞的异常处理器中调用。
  */
 void printk(const char *fmt, ...);

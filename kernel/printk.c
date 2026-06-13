@@ -1,29 +1,29 @@
 /*
- * printk.c — minimal kernel printf
+ * printk.c — 最小内核 printf
  *
- * Writes formatted output character-by-character to uart_putc().
- * No heap allocation, no floating point, small stack footprint.
+ * 逐字符将格式化输出写入 uart_putc()。
+ * 无堆分配，无浮点，小栈 footprint。
  */
 
 #include "kernel/printk.h"
 #include "kernel/uart.h"
 
-/* ── Hex digit lookup ──────────────────────────────────────────────── */
+/* ── 十六进制数字查找表 ──────────────────────────────── */
 static const char g_hex_digits[] = "0123456789abcdef";
 
-/* ── Internal: write a single character ────────────────────────────── */
+/* ── 内部函数：写单个字符 ────────────────────────────── */
 static void put(char c)
 {
-    /* Convert '\n' to "\r\n" for raw serial terminals */
+    /* 将 '\n' 转换为 "\r\n" 以适应原始串行终端 */
     if (c == '\n')
         uart_putc('\r');
     uart_putc(c);
 }
 
-/* ── Internal: write an unsigned integer in base 10 ────────────────── */
+/* ── 内部函数：写无符号整数的十进制表示 ────────────────── */
 static void put_unsigned(uint64_t val)
 {
-    char buf[21];   /* 2^64 = 18446744073709551616 → 20 digits + NUL */
+    char buf[21];   /* 2^64 = 18446744073709551616 → 20 位 + NUL */
     int i = 0;
 
     if (val == 0) {
@@ -40,19 +40,19 @@ static void put_unsigned(uint64_t val)
         put(buf[i]);
 }
 
-/* ── Internal: write an unsigned integer in hex ────────────────────── */
+/* ── 内部函数：写无符号整数的十六进制表示 ────────────────────── */
 static void put_hex(uint64_t val)
 {
     /*
-     * Print leading zeros for the full 64-bit width.
-     * For 32-bit values common in Phase 1, the leading zeros make
-     * addresses (e.g. 0xFE201000) readable at a glance.
+     * 打印 64 位宽度的前导零。
+     * 对于 Phase 1 中常见的 32 位值，前导零使地址
+     * （如 0xFE201000）一目了然。
      */
     for (int shift = 60; shift >= 0; shift -= 4)
         put(g_hex_digits[(val >> shift) & 0xf]);
 }
 
-/* ── Simple vsnprintf core ─────────────────────────────────────────── */
+/* ── 简易 vsnprintf 核心 ─────────────────────────────────────────── */
 static void vprintk(const char *fmt, __builtin_va_list ap)
 {
     for (const char *p = fmt; *p != '\0'; p++) {
@@ -61,7 +61,7 @@ static void vprintk(const char *fmt, __builtin_va_list ap)
             continue;
         }
 
-        p++;  /* skip '%' */
+        p++;  /* 跳过 '%' */
         switch (*p) {
         case '\0':
             return;
@@ -102,7 +102,7 @@ static void vprintk(const char *fmt, __builtin_va_list ap)
             break;
 
         default:
-            /* Unknown format specifier — print it literally */
+            /* 未知格式说明符 —— 按字面量打印 */
             put('%');
             put(*p);
             break;
@@ -110,7 +110,7 @@ static void vprintk(const char *fmt, __builtin_va_list ap)
     }
 }
 
-/* ── Public API ────────────────────────────────────────────────────── */
+/* ── 公开 API ────────────────────────────────────────────────────── */
 void printk(const char *fmt, ...)
 {
     __builtin_va_list ap;

@@ -20,6 +20,7 @@ docs/book/
 .idea/
 *.swp
 *~
+compile_commands.json
 
 # OS
 .DS_Store
@@ -27,3 +28,5 @@ Thumbs.db
 
 # Misc
 *.log
+
+.cache/

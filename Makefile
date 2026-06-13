@@ -55,22 +55,35 @@ OBJDUMP = $(CROSS_COMPILE)objdump
 
 # ── Board → source file selection ────────────────────────────────────
 # Each board picks ONE UART driver + its C preprocessor define.
+# Architecture-specific sources (same for all boards of a given ARCH)
+ifeq ($(ARCH),aarch64)
+  ARCH_C_SRCS := arch/aarch64/trap.c
+endif
+ifeq ($(ARCH),riscv64)
+  ARCH_C_SRCS :=   # RV64 trap not implemented yet (Phase 2)
+endif
+
+# Kernel sources (shared across all boards)
+KERNEL_C_SRCS := kernel/main.c kernel/printk.c
+
 ifeq ($(BOARD),pi4)
-  C_SRCS       := kernel/main.c kernel/uart-pl011.c
+  BOARD_C_SRCS := kernel/uart-pl011.c
   BOARD_DEFINE := BOARD_PI4
 endif
 ifeq ($(BOARD),pi5)
-  C_SRCS       := kernel/main.c kernel/uart-pl011.c
+  BOARD_C_SRCS := kernel/uart-pl011.c
   BOARD_DEFINE := BOARD_PI5
 endif
 ifeq ($(BOARD),virt-riscv)
-  C_SRCS       := kernel/main.c kernel/uart-ns16550.c
+  BOARD_C_SRCS := kernel/uart-ns16550.c
   BOARD_DEFINE := BOARD_VIRT_RISCV
 endif
 ifeq ($(BOARD),sg2002)
-  C_SRCS       := kernel/main.c kernel/uart-ns16550.c   # TBD: check datasheet
+  BOARD_C_SRCS := kernel/uart-ns16550.c   # TBD: check datasheet
   BOARD_DEFINE := BOARD_SG2002
 endif
+
+C_SRCS := $(KERNEL_C_SRCS) $(ARCH_C_SRCS) $(BOARD_C_SRCS)
 
 ifndef C_SRCS
   $(error "Unknown BOARD=$(BOARD).  Supported: pi4, pi5, virt-riscv, sg2002")
@@ -96,7 +109,9 @@ LDFLAGS   = -nostdlib -T $(LDSCRIPT)
 # Targets
 # ══════════════════════════════════════════════════════════════════════
 
-.PHONY: all clean qemu qemu-debug help check-toolchain
+.DEFAULT_GOAL := all
+
+.PHONY: all clean qemu qemu-debug qemu-test help check-toolchain
 
 # ── check-toolchain ──────────────────────────────────────────────────
 # Guard: fail early if no cross-compiler is available.  Only runs when
@@ -153,13 +168,38 @@ qemu-debug: all
 	$(QEMU) -machine $(QEMU_MACHINE) -kernel $(BUILD_DIR)/vmlinux.elf $(QEMU_FLAGS) -s -S
 	@echo "  QEMU    waiting for GDB on :1234"
 
+# ── qemu-test ────────────────────────────────────────────────────────
+# Non-interactive smoke test for CI: run QEMU in background, capture
+# output, verify "hello" appears, kill QEMU, and report pass/fail.
+# Works on both Linux (GNU timeout) and macOS (no timeout).
+qemu-test: all
+	@echo "  QEMU    smoke test ($(ARCH)/$(BOARD))"
+	@rm -f /tmp/minimoss-qemu-test.out
+	@$(QEMU) -machine $(QEMU_MACHINE) -kernel $(BUILD_DIR)/vmlinux.elf $(QEMU_FLAGS) \
+	  > /tmp/minimoss-qemu-test.out 2>&1 & \
+	  QEMU_PID=$$!; \
+	  sleep 3; \
+	  kill $$QEMU_PID 2>/dev/null || true; \
+	  wait $$QEMU_PID 2>/dev/null || true; \
+	  if grep -q "hello" /tmp/minimoss-qemu-test.out 2>/dev/null; then \
+	    echo "  SMOKE   PASS"; \
+	    rm -f /tmp/minimoss-qemu-test.out; \
+	  else \
+	    echo "  SMOKE   FAIL"; \
+	    echo "  --- QEMU output ---"; \
+	    cat /tmp/minimoss-qemu-test.out; \
+	    rm -f /tmp/minimoss-qemu-test.out; \
+	    exit 1; \
+	  fi
+
 # ── help ─────────────────────────────────────────────────────────────
 help:
 	@echo "minimoss build system"
 	@echo ""
 	@echo "Targets:"
 	@echo "  make [ARCH=aarch64|riscv64] [BOARD=pi4|pi5|virt-riscv|sg2002]"
-	@echo "  make qemu          Build and run in QEMU"
+	@echo "  make qemu          Build and run in QEMU (interactive)"
+	@echo "  make qemu-test     Build + QEMU smoke test (CI, non-interactive)"
 	@echo "  make qemu-debug    Build + QEMU with GDB stub (:1234)"
 	@echo "  make clean         Remove build/"
 	@echo "  make help          This message"

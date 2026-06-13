@@ -1,28 +1,78 @@
 /*
- * main.c — 内核 C 入口
+ * main.c — kernel C entry
  *
- * 从 boot.S 跳转过来的第一个 C 函数。此时：
- *   - CPU 已在 EL1（内核态）
- *   - 栈已设置
- *   - BSS 已清零
- *   - MMU 未开（直接操作物理地址）
+ * From boot.S we arrive at EL1 with:
+ *   - stack set (__stack_top)
+ *   - BSS zeroed
+ *   - MMU off (direct physical addresses)
+ *   - only CPU 0 running (CPUs 1–3 parked)
  *
- * 当前唯一任务：往 UART 输出 "hello"，验证整个工具链 + QEMU 链路跑通。
- *
- * UART 硬件细节（基地址、控制器类型）由 boards/<board>/board.h 提供，
- * 驱动代码在 uart-pl011.c / uart-ns16550.c 中。main.c 只依赖 uart.h
- * 的公共接口，不碰硬件寄存器。
+ * Phase 1.3 adds:
+ *   1. UART init + printk hello
+ *   2. Exception vector table (VBAR_EL1)
+ *   3. Generic timer (100 Hz tick)
+ *   4. Idle loop with IRQ-driven tick logging
  */
+#include "arch/aarch64/trap.h"
+#include "kernel/printk.h"
+#include "kernel/uart.h"
 
-#include "uart.h"
+/* ── Generic timer setup ────────────────────────────────────────────── */
 
-/* ── 内核入口 ──────────────────────────────────────────────────── */
+static void timer_setup(void)
+{
+    uint64_t freq;
+    __asm__ volatile("mrs %0, cntfrq_el0" : "=r"(freq));
+    printk("timer: CNTFRQ_EL0 = %u Hz\n", freq);
+
+    /*
+     * Configure the EL1 physical timer for a 100 Hz tick.
+     * CNTP_TVAL_EL0 is a down-counter; when it reaches 0 the timer
+     * asserts ISTATUS and (if unmasked) fires an IRQ.
+     */
+    uint64_t period = freq / 100;
+    __asm__ volatile("msr cntp_tval_el0, %0" :: "r"(period));
+
+    /*
+     * CNTP_CTL_EL0:
+     *   bit 0 = ENABLE   (1 = timer counting)
+     *   bit 1 = IMASK    (0 = interrupt NOT masked)
+     *   bit 2 = ISTATUS  (read-only: 1 = timer condition met)
+     */
+    __asm__ volatile("msr cntp_ctl_el0, %0" :: "r"(1UL));
+
+    printk("timer: 100 Hz tick enabled (period = %u)\n", period);
+}
+
+/* ── Kernel entry ──────────────────────────────────────────────────── */
+
 void kernel_main(void)
 {
     uart_init();
-    uart_puts("hello\n");
+    printk("\n=== minimoss 001AC ===\n");
+    printk("hello from EL1 (AArch64 / Pi 4)\n");
 
-    /* 内核永不退出 */
-    while (1)
-        ;
+    /*
+     * trap_init() installs the vector table and unmasks IRQ (DAIF.I).
+     * Timer IRQs will now reach el1_irq_handler.
+     */
+    trap_init();
+
+    /*
+     * Start the generic timer.  The first tick will fire in ~10 ms
+     * and the IRQ handler in trap.c will re-arm it.
+     */
+    timer_setup();
+
+    printk("kernel: entering idle loop (tick every ~10 ms)\n");
+
+    /* Idle loop — timer IRQs tick and printk in the handler */
+    while (1) {
+        /*
+         * WFI (Wait For Interrupt) puts the CPU in a low-power state
+         * until an IRQ fires.  Once the IRQ handler returns, we loop
+         * back to WFI.
+         */
+        __asm__ volatile("wfi");
+    }
 }

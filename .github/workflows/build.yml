@@ -1,0 +1,58 @@
+#
+# build.yml — CI build + QEMU smoke test
+#
+# Triggered on push/PR to main.  Builds the kernel for each
+# (ARCH, BOARD) pair and runs a quick QEMU smoke test that
+# verifies "hello" appears on the UART output.
+#
+# Matrix:
+#   - aarch64 / pi4       — primary target, must pass
+#   - riscv64 / virt-riscv — secondary, continue-on-error until Phase 2
+#
+
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-smoke:
+    name: "${{ matrix.arch }} / ${{ matrix.board }}"
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - arch: aarch64
+            board: pi4
+            continue-on-error: false
+          - arch: riscv64
+            board: virt-riscv
+            continue-on-error: true   # allowed to fail until Phase 2
+
+    continue-on-error: ${{ matrix.continue-on-error }}
+
+    steps:
+      # ── 1. Checkout ─────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Install cross-compiler ──────────────────────────────
+      - name: Install toolchain
+        run: |
+          bash tools/install-toolchain.sh ${{ matrix.arch }}
+
+      # ── 3. Build kernel ────────────────────────────────────────
+      - name: Build
+        run: |
+          export PATH="$HOME/.local/cross/${{ matrix.arch }}/bin:$PATH"
+          make ARCH=${{ matrix.arch }} BOARD=${{ matrix.board }}
+
+      # ── 4. QEMU smoke test ─────────────────────────────────────
+      - name: QEMU smoke test
+        run: |
+          export PATH="$HOME/.local/cross/${{ matrix.arch }}/bin:$PATH"
+          make ARCH=${{ matrix.arch }} BOARD=${{ matrix.board }} qemu-test
